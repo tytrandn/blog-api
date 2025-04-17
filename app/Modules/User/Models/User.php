@@ -12,8 +12,14 @@ class User extends Model
 
     protected static function booted()
     {
-        static::saved(function ($post) {
-            Cache::forget('users');
+        static::saved(function ($user) {
+            Cache::forget('users.all');
+            Cache::forget("user_{$user->id}");
+        });
+    
+        static::deleted(function ($user) {
+            Cache::forget('users.all');
+            Cache::forget("user_{$user->id}");
         });
     }
 

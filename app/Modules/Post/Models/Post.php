@@ -12,7 +12,13 @@ class Post extends Model
     protected static function booted()
     {
         static::saved(function ($post) {
-            Cache::forget('posts');
+            Cache::forget('posts.all');
+            Cache::forget("post_{$post->id}");
+        });
+    
+        static::deleted(function ($post) {
+            Cache::forget('posts.all');
+            Cache::forget("post_{$post->id}");
         });
     }
 

@@ -82,8 +82,6 @@ class UserController extends BaseController
 
         $user = User::create($request->validated());
 
-        Cache::forget('users.all');
-
         return ApiResponse::success($user, 'Create user successfully', HttpStatusCode::CREATED);
 
     }
@@ -162,8 +160,6 @@ class UserController extends BaseController
         $user = User::findOrFail($id);
         $user->update($request->validated());
 
-        Cache::forget('users.all');
-
         return ApiResponse::success($user, 'User updated successfully');
 
     }
@@ -194,8 +190,6 @@ class UserController extends BaseController
     {
         $user = User::findOrFail($id);
         $user->delete();
-
-        Cache::forget('posts.all');
 
         return ApiResponse::message('User deleted successfully', HttpStatusCode::NO_CONTENT);
     }

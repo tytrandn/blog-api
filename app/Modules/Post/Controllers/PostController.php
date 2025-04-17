@@ -84,8 +84,6 @@ class PostController extends BaseController
 
         $post = Post::create($request->validated());
 
-        Cache::forget('posts.all');
-
         return ApiResponse::success($post, 'Create post successfully', HttpStatusCode::CREATED);
 
     }
@@ -165,8 +163,6 @@ class PostController extends BaseController
         $post = Post::findOrFail($id);
         $post->update($request->validated());
 
-        Cache::forget('posts.all');
-
         return ApiResponse::success($post, 'Post updated successfully');
 
     }
@@ -198,8 +194,6 @@ class PostController extends BaseController
 
         $post = Post::findOrFail($id);
         $post->delete();
-
-        Cache::forget('posts.all');
 
         return ApiResponse::message('Post deleted successfully', HttpStatusCode::NO_CONTENT);
 
