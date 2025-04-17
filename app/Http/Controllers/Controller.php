@@ -8,7 +8,7 @@ namespace App\Http\Controllers;
  *     version="1.0.0",
  *     description="Blog API Documentation",
  *     @OA\Contact(
- *         email="admin@blogapi.com"
+ *         email="ty.tran.sa.dn@gmail.com"
  *     ),
  * )
  */

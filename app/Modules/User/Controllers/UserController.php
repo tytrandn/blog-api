@@ -5,9 +5,11 @@ namespace App\Modules\User\Controllers;
 use App\Modules\User\Models\User;
 use App\Modules\User\Requests\UserRequest;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use OpenApi\Annotations as OA;
 use Illuminate\Support\Facades\Cache;
+use App\Helpers\ApiResponse;
+use App\Helpers\HttpStatusCode;
 
 /**
  * @OA\Schema(
@@ -20,7 +22,7 @@ use Illuminate\Support\Facades\Cache;
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-04-16T00:00:00Z")
  * )
  */
-class UserController extends Controller
+class UserController extends BaseController
 {
     /**
      * @OA\Get(
@@ -39,14 +41,13 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = Cache::remember('users', now()->addMinutes(10), function () {
+
+        $users = Cache::store('redis')->remember('users.all', now()->addMinutes($this->cacheExpiration), function () {
             return User::all();
         });
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $users
-        ]);
+        return ApiResponse::success($users, 'Users retrieved successfully');
+
     }
 
     /**
@@ -78,15 +79,13 @@ class UserController extends Controller
      */
     public function store(UserRequest $request)
     {
+
         $user = User::create($request->validated());
 
         Cache::forget('users.all');
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Create user successfully.',
-            'data' => $user
-        ], 201);
+        return ApiResponse::success($user, 'Create user successfully', HttpStatusCode::CREATED);
+
     }
 
     /**
@@ -114,12 +113,13 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::findOrFail($id);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $user
-        ]);
+        $user = Cache::store('redis')->remember("user_{$id}", now()->addMinutes($this->cacheExpiration), function () use ($id) {
+            return User::findOrFail($id);
+        });
+
+        return ApiResponse::success($user, 'User retrieved successfully');
+
     }
 
     /**
@@ -158,16 +158,14 @@ class UserController extends Controller
      */
     public function update(UserRequest $request, $id)
     {
+
         $user = User::findOrFail($id);
         $user->update($request->validated());
 
         Cache::forget('users.all');
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Update user successfully.',
-            'data' => $user
-        ]);
+        return ApiResponse::success($user, 'User updated successfully');
+
     }
 
     /**
@@ -197,10 +195,8 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Delete user successfully.',
-            'data' => null
-        ], 204);
+        Cache::forget('posts.all');
+
+        return ApiResponse::message('User deleted successfully', HttpStatusCode::NO_CONTENT);
     }
 }

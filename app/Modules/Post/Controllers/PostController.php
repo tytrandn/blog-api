@@ -5,9 +5,11 @@ namespace App\Modules\Post\Controllers;
 use App\Modules\Post\Models\Post;
 use App\Modules\Post\Requests\PostRequest;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use OpenApi\Annotations as OA;
 use Illuminate\Support\Facades\Cache;
+use App\Helpers\ApiResponse;
+use App\Helpers\HttpStatusCode;
 
 /**
  * @OA\Schema(
@@ -21,7 +23,7 @@ use Illuminate\Support\Facades\Cache;
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-04-16T00:00:00Z")
  * )
  */
-class PostController extends Controller
+class PostController extends BaseController
 {
     /**
      * @OA\Get(
@@ -38,16 +40,15 @@ class PostController extends Controller
      *     )
      * )
      */
-    public function index() {
+    public function index() 
+    {
 
-        $posts = Cache::remember('posts.all', now()->addMinutes(10), function () {
+        $posts = Cache::store('redis')->remember('posts.all', now()->addMinutes($this->cacheExpiration), function () {
             return Post::with('user')->get();
         });
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $posts
-        ]);
+        return ApiResponse::success($posts, 'Posts retrieved successfully');
+
     }
 
     /**
@@ -80,15 +81,13 @@ class PostController extends Controller
      */
     public function store(PostRequest $request)
     {
+
         $post = Post::create($request->validated());
 
         Cache::forget('posts.all');
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Create post successfully.',
-            'data' => $post
-        ], 201);
+        return ApiResponse::success($post, 'Create post successfully', HttpStatusCode::CREATED);
+
     }
 
     /**
@@ -116,12 +115,13 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $post = Post::findOrFail($id);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $post
-        ]);
+        $post = Cache::store('redis')->remember("post_{$id}", now()->addMinutes($this->cacheExpiration), function () use ($id) {
+            return Post::with('user')->findOrFail($id);
+        });
+
+        return ApiResponse::success($post, 'Post retrieved successfully');
+
     }
 
     /**
@@ -165,14 +165,10 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         $post->update($request->validated());
 
-
         Cache::forget('posts.all');
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Update post successfully.',
-            'data' => $post
-        ], 201);
+        return ApiResponse::success($post, 'Post updated successfully');
+
     }
 
     /**
@@ -203,10 +199,9 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         $post->delete();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Delete post successfully.',
-            'data' => null
-        ], 204);
+        Cache::forget('posts.all');
+
+        return ApiResponse::message('Post deleted successfully', HttpStatusCode::NO_CONTENT);
+
     }
 }

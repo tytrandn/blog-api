@@ -11,6 +11,8 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
+use App\Helpers\ApiResponse;
+use App\Helpers\HttpStatusCode;
 
 class Handler extends ExceptionHandler
 {
@@ -49,39 +51,23 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (ValidationException $e, $request) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-                'errors' => $e->errors()
-            ], 422);
+            return ApiResponse::error('Validation failed', HttpStatusCode::UNPROCESSABLE_ENTITY, $e->errors());
         });
 
         $this->renderable(function (ModelNotFoundException $e, $request) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Resource not found',
-            ], 404);
+            return ApiResponse::error('Resource not found', HttpStatusCode::NOT_FOUND);
         });
 
         $this->renderable(function (NotFoundHttpException $e, $request) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Route not found',
-            ], 404);
+            return ApiResponse::error('Route not found', HttpStatusCode::NOT_FOUND);
         });
 
         $this->renderable(function (AuthenticationException $e, $request) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthenticated',
-            ], 401);
+            return ApiResponse::error('Unauthenticated', HttpStatusCode::UNAUTHORIZED);
         });
 
         $this->renderable(function (AuthorizationException $e, $request) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Forbidden',
-            ], 403);
+            return ApiResponse::error('Forbidden', HttpStatusCode::FORBIDDEN);
         });
     }
 
@@ -94,42 +80,12 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
-        if ($exception instanceof ValidationException) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $exception->errors(),
-            ], 422);
+
+        if (config('app.debug')) {
+            return ApiResponse::error($exception->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
-        if ($exception instanceof ModelNotFoundException) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Resource not found',
-            ], 404);
-        }
+        return ApiResponse::error('Internal Server Error', HttpStatusCode::INTERNAL_SERVER_ERROR);
 
-        if ($exception instanceof NotFoundHttpException) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Page not found',
-            ], 404);
-        }
-
-        if ($exception instanceof AuthenticationException) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthenticated',
-            ], 401);
-        }
-
-        if ($exception instanceof AuthorizationException) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Forbidden',
-            ], 403);
-        }
-
-        return parent::render($request, $exception);
     }
 }

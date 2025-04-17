@@ -3,6 +3,7 @@ namespace App\Modules\Post\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Modules\User\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 class Post extends Model
 {

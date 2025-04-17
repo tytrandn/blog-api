@@ -4,7 +4,7 @@
 A simple Blog Post RESTful API built with Laravel, featuring:
 
 - CRUD for Users and Posts
-- SQLite database (no MySQL required)
+- SQLite database
 - Feature-based folder structure
 - Swagger (OpenAPI) documentation
 - RESTful error handling
@@ -18,8 +18,8 @@ A simple Blog Post RESTful API built with Laravel, featuring:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/laravel-blog-api.git
-cd laravel-blog-api
+git clone https://github.com/tytrandn/blog-api.git
+cd blog-api
 ```
 
 ### 2. Install dependencies
