@@ -167,10 +167,6 @@ You can now test the API using Postman or Swagger UI.
         - api-docs.json
 ```
 
-Follows feature-based organization with Redis caching and Eager Loading.
-
----
-
 ## ✅ Features
 
 - Feature-based structure
@@ -178,7 +174,7 @@ Follows feature-based organization with Redis caching and Eager Loading.
 - Redis Caching on GET endpoints
 - Eager Loading for performance
 - Centralized error handling
-- SQLite database (no MySQL setup required)
+- SQLite database
 
 ---
 
