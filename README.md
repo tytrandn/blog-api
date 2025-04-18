@@ -133,24 +133,26 @@ You can now test the API using Postman or Swagger UI.
     /Exceptions/
         - Handler.php
     /Http
-        /Requests
-            /Modules
-                /User
-                    /Request
-                /Post
-                    /Request
+        /Controller
+            - BaseController.php
         - Kernel.php
     /Modules
         /User
             - Controllers
             - Models
             - Requests
+            - Services
         /Post
             - Controllers
             - Models
             - Requests
+            - Services
     /Providers
         - RouteServiceProvider.php
+        - PostServiceProvider.php
+        - UserServiceProvider.php
+    /Providers
+        - ConfigRepository.php
 /config
     - swagger.php
 /database
