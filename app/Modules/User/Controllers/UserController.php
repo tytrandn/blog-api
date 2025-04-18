@@ -2,14 +2,13 @@
 
 namespace App\Modules\User\Controllers;
 
-use App\Modules\User\Models\User;
 use App\Modules\User\Requests\UserRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use OpenApi\Annotations as OA;
-use Illuminate\Support\Facades\Cache;
 use App\Helpers\ApiResponse;
 use App\Helpers\HttpStatusCode;
+use App\Modules\User\Services\UserService;
 
 /**
  * @OA\Schema(
@@ -24,6 +23,14 @@ use App\Helpers\HttpStatusCode;
  */
 class UserController extends BaseController
 {
+
+    protected $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/users",
@@ -42,9 +49,7 @@ class UserController extends BaseController
     public function index()
     {
 
-        $users = Cache::store('redis')->remember('users.all', now()->addMinutes($this->cacheExpiration), function () {
-            return User::all();
-        });
+        $users = $this->userService->getAllUsers();
 
         return ApiResponse::success($users, 'Users retrieved successfully');
 
@@ -80,7 +85,7 @@ class UserController extends BaseController
     public function store(UserRequest $request)
     {
 
-        $user = User::create($request->validated());
+        $user = $this->userService->createUser($request->validated());
 
         return ApiResponse::success($user, 'Create user successfully', HttpStatusCode::CREATED);
 
@@ -112,9 +117,7 @@ class UserController extends BaseController
     public function show($id)
     {
 
-        $user = Cache::store('redis')->remember("user_{$id}", now()->addMinutes($this->cacheExpiration), function () use ($id) {
-            return User::findOrFail($id);
-        });
+        $user = $this->userService->getUserById($id);
 
         return ApiResponse::success($user, 'User retrieved successfully');
 
@@ -157,8 +160,7 @@ class UserController extends BaseController
     public function update(UserRequest $request, $id)
     {
 
-        $user = User::findOrFail($id);
-        $user->update($request->validated());
+        $user = $this->userService->updateUser($id, $request->validated());
 
         return ApiResponse::success($user, 'User updated successfully');
 
@@ -188,8 +190,7 @@ class UserController extends BaseController
      */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        $this->userService->deleteUser($id);
 
         return ApiResponse::message('User deleted successfully', HttpStatusCode::NO_CONTENT);
     }

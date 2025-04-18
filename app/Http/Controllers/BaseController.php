@@ -6,10 +6,10 @@ use Illuminate\Support\Facades\Config;
 
 abstract class BaseController extends Controller
 {
-    protected int $cacheExpiration;
+    // protected int $cacheExpiration;
 
     public function __construct()
     {
-        $this->cacheExpiration = (int) Config::get('cache.cache_expiration_time', 10);
+        // $this->cacheExpiration = (int) Config::get('cache.cache_expiration_time', 10);
     }
 }

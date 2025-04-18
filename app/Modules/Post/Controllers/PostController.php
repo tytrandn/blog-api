@@ -2,14 +2,13 @@
 
 namespace App\Modules\Post\Controllers;
 
-use App\Modules\Post\Models\Post;
 use App\Modules\Post\Requests\PostRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use OpenApi\Annotations as OA;
-use Illuminate\Support\Facades\Cache;
 use App\Helpers\ApiResponse;
 use App\Helpers\HttpStatusCode;
+use App\Modules\Post\Services\PostService;
 
 /**
  * @OA\Schema(
@@ -25,6 +24,14 @@ use App\Helpers\HttpStatusCode;
  */
 class PostController extends BaseController
 {
+
+    protected $postService;
+
+    public function __construct(PostService $postService)
+    {
+        $this->postService = $postService;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/posts",
@@ -43,9 +50,7 @@ class PostController extends BaseController
     public function index() 
     {
 
-        $posts = Cache::store('redis')->remember('posts.all', now()->addMinutes($this->cacheExpiration), function () {
-            return Post::with('user')->get();
-        });
+        $posts = $this->postService->getAllPosts();
 
         return ApiResponse::success($posts, 'Posts retrieved successfully');
 
@@ -82,7 +87,7 @@ class PostController extends BaseController
     public function store(PostRequest $request)
     {
 
-        $post = Post::create($request->validated());
+        $post = $this->postService->createPost($request->validated());
 
         return ApiResponse::success($post, 'Create post successfully', HttpStatusCode::CREATED);
 
@@ -114,9 +119,7 @@ class PostController extends BaseController
     public function show($id)
     {
 
-        $post = Cache::store('redis')->remember("post_{$id}", now()->addMinutes($this->cacheExpiration), function () use ($id) {
-            return Post::with('user')->findOrFail($id);
-        });
+        $post = $this->postService->getPostById($id);
 
         return ApiResponse::success($post, 'Post retrieved successfully');
 
@@ -160,8 +163,7 @@ class PostController extends BaseController
     public function update(PostRequest $request, $id)
     {
 
-        $post = Post::findOrFail($id);
-        $post->update($request->validated());
+        $post = $this->postService->updatePost($id, $request->validated());
 
         return ApiResponse::success($post, 'Post updated successfully');
 
@@ -192,8 +194,7 @@ class PostController extends BaseController
     public function destroy($id)
     {
 
-        $post = Post::findOrFail($id);
-        $post->delete();
+        $this->postService->deletePost($id);
 
         return ApiResponse::message('Post deleted successfully', HttpStatusCode::NO_CONTENT);
 
